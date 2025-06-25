@@ -1,27 +1,10 @@
-# LAG
-# NO. OF VEHICLES IN SIGNAL CLASS
-# stops not used
-# DISTRIBUTION
-# BUS TOUCHING ON TURNS
-# Distribution using python class
-
-# *** IMAGE XY COOD IS TOP LEFT
-import random
+import random #generating random (e.g., vehicle types, spawn times).
 import math
 import time
 import threading
-# from vehicle_detection import detection
-import pygame
+import pygame #creating the graphical simulation window, drawing shapes, images, and handling events.
 import sys
-import os
-
-# options={
-#    'model':'./cfg/yolo.cfg',     #specifying the path of model
-#    'load':'./bin/yolov2.weights',   #weights
-#    'threshold':0.3     #minimum confidence factor to create a box, greater than 0.3 good
-# }
-
-# tfnet=TFNet(options)    #READ ABOUT TFNET
+import pyttsx3
 
 # Default values of signal times
 defaultRed = 150
@@ -113,12 +96,10 @@ class Vehicle(pygame.sprite.Sprite):
         self.turned = 0
         self.rotateAngle = 0
         vehicles[direction][lane].append(self)
-        # self.stop = stops[direction][lane]
         self.index = len(vehicles[direction][lane]) - 1
         path = "images/" + direction + "/" + vehicleClass + ".png"
         self.originalImage = pygame.image.load(path)
         self.currentImage = pygame.image.load(path)
-
     
         if(direction=='right'):
             if(len(vehicles[direction][lane])>1 and vehicles[direction][lane][self.index-1].crossed==0):    # if more than 1 vehicle in the lane of vehicle before it has crossed stop line
@@ -175,19 +156,12 @@ class Vehicle(pygame.sprite.Sprite):
                         self.y += 1.8
                         if(self.rotateAngle==90):
                             self.turned = 1
-                            # path = "images/" + directionNumbers[((self.direction_number+1)%noOfSignals)] + "/" + self.vehicleClass + ".png"
-                            # self.x = mid[self.direction]['x']
-                            # self.y = mid[self.direction]['y']
-                            # self.image = pygame.image.load(path)
                     else:
                         if(self.index==0 or self.y+self.currentImage.get_rect().height<(vehicles[self.direction][self.lane][self.index-1].y - gap2) or self.x+self.currentImage.get_rect().width<(vehicles[self.direction][self.lane][self.index-1].x - gap2)):
                             self.y += self.speed
             else: 
                 if((self.x+self.currentImage.get_rect().width<=self.stop or self.crossed == 1 or (currentGreen==0 and currentYellow==0)) and (self.index==0 or self.x+self.currentImage.get_rect().width<(vehicles[self.direction][self.lane][self.index-1].x - gap2) or (vehicles[self.direction][self.lane][self.index-1].turned==1))):                
-                # (if the image has not reached its stop coordinate or has crossed stop line or has green signal) and (it is either the first vehicle in that lane or it is has enough gap to the next vehicle in that lane)
                     self.x += self.speed  # move the vehicle
-
-
 
         elif(self.direction=='down'):
             if(self.crossed==0 and self.y+self.currentImage.get_rect().height>stopLines[self.direction]):
@@ -228,19 +202,12 @@ class Vehicle(pygame.sprite.Sprite):
                         self.y -= 2.5
                         if(self.rotateAngle==90):
                             self.turned = 1
-                            # path = "images/" + directionNumbers[((self.direction_number+1)%noOfSignals)] + "/" + self.vehicleClass + ".png"
-                            # self.x = mid[self.direction]['x']
-                            # self.y = mid[self.direction]['y']
-                            # self.currentImage = pygame.image.load(path)
                     else:
                         if(self.index==0 or self.y>(vehicles[self.direction][self.lane][self.index-1].y + vehicles[self.direction][self.lane][self.index-1].currentImage.get_rect().height +  gap2) or self.x>(vehicles[self.direction][self.lane][self.index-1].x + gap2)):
                             self.y -= self.speed
             else: 
                 if((self.x>=self.stop or self.crossed == 1 or (currentGreen==2 and currentYellow==0)) and (self.index==0 or self.x>(vehicles[self.direction][self.lane][self.index-1].x + vehicles[self.direction][self.lane][self.index-1].currentImage.get_rect().width + gap2) or (vehicles[self.direction][self.lane][self.index-1].turned==1))):                
-                # (if the image has not reached its stop coordinate or has crossed stop line or has green signal) and (it is either the first vehicle in that lane or it is has enough gap to the next vehicle in that lane)
                     self.x -= self.speed  # move the vehicle    
-            # if((self.x>=self.stop or self.crossed == 1 or (currentGreen==2 and currentYellow==0)) and (self.index==0 or self.x>(vehicles[self.direction][self.lane][self.index-1].x + vehicles[self.direction][self.lane][self.index-1].currentImage.get_rect().width + gap2))):                
-            #     self.x -= self.speed
         elif(self.direction=='up'):
             if(self.crossed==0 and self.y<stopLines[self.direction]):
                 self.crossed = 1
@@ -280,29 +247,21 @@ def initialize():
 def setTime():
     global noOfCars, noOfBikes, noOfBuses, noOfTrucks, noOfRickshaws, noOfLanes
     global carTime, busTime, truckTime, rickshawTime, bikeTime
-    os.system("say detecting vehicles, "+directionNumbers[(currentGreen+1)%noOfSignals])
-#    detection_result=detection(currentGreen,tfnet)
-#    greenTime = math.ceil(((noOfCars*carTime) + (noOfRickshaws*rickshawTime) + (noOfBuses*busTime) + (noOfBikes*bikeTime))/(noOfLanes+1))
-#    if(greenTime<defaultMinimum):
-#       greenTime = defaultMinimum
-#    elif(greenTime>defaultMaximum):
-#       greenTime = defaultMaximum
-    # greenTime = len(vehicles[currentGreen][0])+len(vehicles[currentGreen][1])+len(vehicles[currentGreen][2])
-    # noOfVehicles = len(vehicles[directionNumbers[nextGreen]][1])+len(vehicles[directionNumbers[nextGreen]][2])-vehicles[directionNumbers[nextGreen]]['crossed']
-    # print("no. of vehicles = ",noOfVehicles)
+    engine = pyttsx3.init()
+    text = f"detecting vehicles, {directionNumbers[(currentGreen+1)%noOfSignals]}"
+    engine.say(text)
+    engine.runAndWait()
     noOfCars, noOfBuses, noOfTrucks, noOfRickshaws, noOfBikes = 0,0,0,0,0
     for j in range(len(vehicles[directionNumbers[nextGreen]][0])):
         vehicle = vehicles[directionNumbers[nextGreen]][0][j]
         if(vehicle.crossed==0):
             vclass = vehicle.vehicleClass
-            # print(vclass)
             noOfBikes += 1
     for i in range(1,3):
         for j in range(len(vehicles[directionNumbers[nextGreen]][i])):
             vehicle = vehicles[directionNumbers[nextGreen]][i][j]
             if(vehicle.crossed==0):
                 vclass = vehicle.vehicleClass
-                # print(vclass)
                 if(vclass=='car'):
                     noOfCars += 1
                 elif(vclass=='bus'):
@@ -311,15 +270,12 @@ def setTime():
                     noOfTrucks += 1
                 elif(vclass=='rickshaw'):
                     noOfRickshaws += 1
-    # print(noOfCars)
-    greenTime = math.ceil(((noOfCars*carTime) + (noOfRickshaws*rickshawTime) + (noOfBuses*busTime) + (noOfTrucks*truckTime)+ (noOfBikes*bikeTime))/(noOfLanes+1))
-    # greenTime = math.ceil((noOfVehicles)/noOfLanes) 
+    greenTime = math.ceil(((noOfCars*carTime) + (noOfRickshaws*rickshawTime) + (noOfBuses*busTime) + (noOfTrucks*truckTime)+ (noOfBikes*bikeTime))/(noOfLanes+1)) 
     print('Green Time: ',greenTime)
     if(greenTime<defaultMinimum):
         greenTime = defaultMinimum
     elif(greenTime>defaultMaximum):
         greenTime = defaultMaximum
-    # greenTime = random.randint(15,50)
     signals[(currentGreen+1)%(noOfSignals)].green = greenTime
    
 def repeat():
@@ -331,7 +287,6 @@ def repeat():
             thread = threading.Thread(name="detection",target=setTime, args=())
             thread.daemon = True
             thread.start()
-            # setTime()
         time.sleep(1)
     currentYellow = 1   # set yellow signal on
     vehicleCountTexts[currentGreen] = "0"
@@ -423,7 +378,7 @@ def simulationTime():
             print('Total vehicles passed: ',totalVehicles)
             print('Total time passed: ',timeElapsed)
             print('No. of vehicles passed per unit time: ',(float(totalVehicles)/float(timeElapsed)))
-            os._exit(1)
+
     
 
 class Main:
@@ -505,10 +460,7 @@ class Main:
         # display the vehicles
         for vehicle in simulation:  
             screen.blit(vehicle.currentImage, [vehicle.x, vehicle.y])
-            # vehicle.render(screen)
             vehicle.move()
         pygame.display.update()
 
 Main()
-
-  
